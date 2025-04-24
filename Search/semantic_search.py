@@ -37,7 +37,7 @@ def semantic_search(query, top_k=5):
     for i, idx in enumerate(indices[0]):
         title = titles[idx]
         text = texts[idx]
-        score = float(scores[0][i])
+        score = f"{round(float(scores[0][i]) * 100, 2)}%"
         source_url = generate_source_url(title)
 
         results.append({
