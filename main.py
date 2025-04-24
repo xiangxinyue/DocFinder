@@ -1,18 +1,26 @@
-from Database.setup_data import setup_database
-from Search.semantic_search import semantic_search
+from fastapi import FastAPI
+from pydantic import BaseModel
+from Search.semantic_search import nn_search  
 
-#setting up the database
-setup_database()
+app = FastAPI()
 
-print("\nSemantic Search Ready. Type your query below (or type 'exit' to quit):")
-while True:
-    query = input("\nQuery: ").strip()
-    if query.lower() == "exit":
-        break
+class QueryRequest(BaseModel):
+    query: str
 
-    result = semantic_search(query, top_k=3)
+@app.post("/query")
+def query(request: QueryRequest):
+    num_index, score, index, sentence_decoder, title_decoder = nn_search(
+        texts=[request.query], n_neighbors=5, load_title_decoder=True
+    )
 
-    for r in result["matches"]:
-        print(f"\n{r['title']} (Score: {r['score']:.4f})")
-        print(f"Source: {r['source']}")
-        print(f"{r['text'][:300]}...\n")
+    results = []
+    for i in range(5):
+        idx = index[0][i]
+        nid = num_index[0][i]
+        results.append({
+            "text": sentence_decoder[nid][idx],
+            "title": title_decoder[nid][idx],
+            "score": float(score[0][i]),
+            "source": f"https://example.com/{title_decoder[nid][idx]}" 
+        })
+    return {"matches": results}
