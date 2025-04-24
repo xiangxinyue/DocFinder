@@ -1,0 +1,72 @@
+/* App container */
+.app-container {
+  max-width: 640px;
+  margin: 3rem auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen;
+  padding: 1rem;
+  color: #1f2937;
+}
+
+/* Title */
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+/* Search bar row */
+.search-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  align-items: center;
+}
+
+/* Input field */
+input {
+  flex: 1;
+  padding: 0.65rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  outline-color: #3b82f6;
+}
+
+/* Dropdown + button */
+select, button {
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: white;
+  cursor: pointer;
+}
+
+/* Button hover */
+button:hover {
+  background-color: #e5e7eb;
+}
+
+/* Result text */
+h3 {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  color: #374151;
+}
+
+/* Result card */
+.result-card {
+  background: #f9fafb;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  border: 1px solid #e5e7eb;
+}
+
+/* Source & copy */
+.card-links a {
+  color: #3b82f6;
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-right: 1rem;
+}
