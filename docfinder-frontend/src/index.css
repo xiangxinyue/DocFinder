@@ -13,9 +13,10 @@
   -moz-osx-font-smoothing: grayscale;
 
   display: flex; 
+  flex-direction: column;
+  gap: 10px;
   justify-content: center; 
   align-items: center; 
-  height: 100vh;
 }
 
 a {
