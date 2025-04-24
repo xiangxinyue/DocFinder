@@ -21,6 +21,6 @@ def query(request: QueryRequest):
             "text": sentence_decoder[nid][idx],
             "title": title_decoder[nid][idx],
             "score": float(score[0][i]),
-            "source": f"https://example.com/{title_decoder[nid][idx]}" 
+            "source": f"https://en.wikipedia.org/wiki/{title_decoder[nid][idx].replace(' ', '_')}"
         })
     return {"matches": results}
