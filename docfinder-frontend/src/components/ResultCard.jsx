@@ -5,6 +5,7 @@ export default function ResultCard({ result }) {
     <div className="result-card">
       <p>“{result.text}”</p>
       <p><strong>{result.title}</strong></p>
+      <p>Accuracy: {result.score}</p>
       <div className="card-links">
         <a href={result.url || "#"} target="_blank" rel="noreferrer">🔗 View source</a>
         &nbsp;&nbsp;
