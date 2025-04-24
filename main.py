@@ -48,7 +48,7 @@ def query(request: QueryRequest):
             "text": match["text"],
             "title": match["title"],
             "score": match["score"],
-            "source": match["source"]
+            "url": match["source"]
         })
 
     return {"matches": results}
