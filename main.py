@@ -22,24 +22,32 @@ setup_database()
 
 from fastapi import FastAPI
 from pydantic import BaseModel
-from Search.semantic_search import semantic_search  
-
 from fastapi.middleware.cors import CORSMiddleware
+import os
+# Import your search function
+from Search.semantic_search import semantic_search
 
 app = FastAPI()
 
+# Update CORS middleware configuration with more permissive settings
 app.add_middleware(
     CORSMiddleware,
+    # Include both the specific domains and a wildcard for development
     allow_origins=[
         "https://doc-finder-ecru.vercel.app",
         "https://doc-finder-git-main-havewaveteam12.vercel.app",
-        "https://doc-finder-8ftcgmeom-havewaveteam12.vercel.app"
+        "https://doc-finder-8ftcgmeom-havewaveteam12.vercel.app",
+        # Add the exact URL you're seeing in the error
+        "https://docfinder-ncrl.onrender.com",
+        # You can add this during development and remove in production
+        "*"
     ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],  # Specify methods explicitly
     allow_headers=["*"],
+    # Add this to handle preflight requests properly
+    max_age=86400,  # 24 hours in seconds
 )
-
 
 @app.get("/")
 def root():
@@ -50,8 +58,8 @@ class QueryRequest(BaseModel):
 
 @app.post("/query")
 def query(request: QueryRequest):
-    results_raw = semantic_search(request.query, top_k=5)  
-
+    results_raw = semantic_search(request.query, top_k=5)
+    
     results = []
     for match in results_raw["matches"]:
         results.append({
@@ -60,11 +68,11 @@ def query(request: QueryRequest):
             "score": match["score"],
             "url": match["source"]
         })
-
+    
     return {"matches": results}
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", 8000)) 
+    port = int(os.environ.get("PORT", 8000))
+    
     uvicorn.run("main:app", host="0.0.0.0", port=port)
-
