@@ -6,7 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-# ========== Step 1: Setup GitHub Releases download ==========
 def download_file(url, output_path):
     try:
         if not os.path.exists(output_path):
@@ -27,17 +26,14 @@ def download_file(url, output_path):
 def setup_database():
     try:
         os.makedirs("Database", exist_ok=True)
-
         index_url = "https://github.com/xiangxinyue/DocFinder/releases/download/release/wiki_index.faiss"
         metadata_url = "https://github.com/xiangxinyue/DocFinder/releases/download/release/wiki_metadata.pkl"
-
         download_file(index_url, "Database/wiki_index.faiss")
         download_file(metadata_url, "Database/wiki_metadata.pkl")
         print("Database setup complete")
     except Exception as e:
         print(f"Error setting up database: {str(e)}")
 
-# ========== Step 2: FastAPI App + Middleware ==========
 app = FastAPI()
 
 @app.exception_handler(Exception)
@@ -47,7 +43,11 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://doc-finder-ecru.vercel.app",
+        "https://doc-finder-havewaveteam12.vercel.app",
+        "http://doc-finder-git-main-havewaveteam12.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -69,12 +69,10 @@ async def options_query():
 async def health():
     return {"status": "healthy"}
 
-# ========== Step 3: Run setup in background thread ==========
 db_thread = threading.Thread(target=setup_database)
 db_thread.daemon = True
 db_thread.start()
 
-# ========== Step 4: Define Query API ==========
 class QueryRequest(BaseModel):
     query: str
 
@@ -84,7 +82,6 @@ async def query(request: QueryRequest):
         from Search.semantic_search import semantic_search
         print(f"Processing query: {request.query}")
         results_raw = semantic_search(request.query, top_k=5)
-
         results = []
         for match in results_raw["matches"]:
             results.append({
@@ -98,7 +95,6 @@ async def query(request: QueryRequest):
         print(f"Error processing query: {str(e)}")
         raise
 
-# ========== Optional: Local dev server ==========
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
