@@ -47,7 +47,6 @@ app.add_middleware(
         "https://doc-finder-ecru.vercel.app",
         "https://doc-finder-havewaveteam12.vercel.app",
         "http://doc-finder-git-main-havewaveteam12.vercel.app",
-        "*"  # Allow all origins for development purposes
     ],
     allow_credentials=True,
     allow_methods=["*"],
