@@ -23,10 +23,9 @@ function App() {
     setIsLoading(true);
     
     try {
-      // Use local API proxy instead of calling remote API directly
-      const response = await axios.post("https://docfinder-u8c5.onrender.com/query", {
-        query: query
-      });
+      // Changed to use Vercel proxy (/api/proxy) to avoid CORS errors
+      const response = await axios.post("/api/proxy", { query });
+
       
       if (response.data && response.data.matches) {
         setResults(response.data.matches);
