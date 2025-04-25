@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-gdown
+requests
 faiss-cpu
 sentence-transformers
 numpy

@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+# ========== Setup Database ==========
 def download_file(url, output_path):
     try:
         if not os.path.exists(output_path):
@@ -34,6 +35,7 @@ def setup_database():
     except Exception as e:
         print(f"Error setting up database: {str(e)}")
 
+# ========== Initialize FastAPI ==========
 app = FastAPI()
 
 @app.exception_handler(Exception)
@@ -73,13 +75,40 @@ db_thread = threading.Thread(target=setup_database)
 db_thread.daemon = True
 db_thread.start()
 
+# ========== Load Semantic Search ==========
+from sentence_transformers import SentenceTransformer
+import pickle
+import faiss
+import numpy as np
+
+model = SentenceTransformer('all-MiniLM-L6-v2')
+index = faiss.read_index("Database/wiki_index.faiss")
+with open("Database/wiki_metadata.pkl", "rb") as f:
+    metadata = pickle.load(f)
+
+def semantic_search(query: str, top_k: int = 5):
+    query_embedding = model.encode([query])
+    distances, indices = index.search(query_embedding, top_k)
+
+    results = []
+    for i in range(top_k):
+        idx = indices[0][i]
+        results.append({
+            "text": metadata[idx]['text'],
+            "title": metadata[idx]['title'],
+            "score": float(distances[0][i]),
+            "source": metadata[idx]['url']
+        })
+
+    return {"matches": results}
+
+# ========== Define Query Endpoint ==========
 class QueryRequest(BaseModel):
     query: str
 
 @app.post("/query")
 async def query(request: QueryRequest):
     try:
-        from Search.semantic_search import semantic_search
         print(f"Processing query: {request.query}")
         results_raw = semantic_search(request.query, top_k=5)
         results = []
@@ -95,6 +124,7 @@ async def query(request: QueryRequest):
         print(f"Error processing query: {str(e)}")
         raise
 
+# ========== Local Development ==========
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
