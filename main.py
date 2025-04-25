@@ -36,6 +36,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+def root():
+    return {"status": "Backend is up"}
+    
 class QueryRequest(BaseModel):
     query: str
 
@@ -53,3 +57,9 @@ def query(request: QueryRequest):
         })
 
     return {"matches": results}
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000)) 
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
+
