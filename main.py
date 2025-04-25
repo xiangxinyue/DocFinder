@@ -1,10 +1,13 @@
 import os
+import faiss
+import pickle
 import requests
 import threading
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from sentence_transformers import SentenceTransformer
 
 def download_file(url, output_path):
     try:
@@ -34,12 +37,50 @@ def setup_database():
     except Exception as e:
         print(f"Error setting up database: {str(e)}")
 
-app = FastAPI()
+def load_index_and_metadata():
+    index_path = "Database/wiki_index.faiss"
+    metadata_path = "Database/wiki_metadata.pkl"
 
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    print(f"Global error: {str(exc)}")
-    return JSONResponse(status_code=500, content={"message": f"Internal server error: {str(exc)}"})
+    if not os.path.exists(index_path) or not os.path.exists(metadata_path):
+        raise FileNotFoundError("FAISS index or metadata file not found.")
+
+    index = faiss.read_index(index_path)
+    with open(metadata_path, "rb") as f:
+        metadata = pickle.load(f)
+
+    return index, metadata["titles"], metadata["texts"]
+
+def load_model():
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    model.max_seq_length = 512
+    return model
+
+def generate_source_url(title):
+    return f"https://en.wikipedia.org/wiki/{title.replace(' ', '_')}"
+
+def semantic_search(query, top_k=5):
+    global index, titles, texts, model
+
+    query_embedding = model.encode([query], normalize_embeddings=True)
+    scores, indices = index.search(query_embedding, top_k)
+
+    results = []
+    for i, idx in enumerate(indices[0]):
+        title = titles[idx]
+        text = texts[idx]
+        score = f"{round(float(scores[0][i]) * 100, 2)}%"
+        source_url = generate_source_url(title)
+
+        results.append({
+            "title": title,
+            "text": text,
+            "score": score,
+            "source": source_url
+        })
+
+    return {"matches": results}
+
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
@@ -52,6 +93,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    print(f"Global error: {str(exc)}")
+    return JSONResponse(status_code=500, content={"message": f"Internal server error: {str(exc)}"})
 
 @app.get("/")
 async def root():
@@ -69,31 +115,29 @@ async def options_query():
 async def health():
     return {"status": "healthy"}
 
-db_thread = threading.Thread(target=setup_database)
-db_thread.daemon = True
-db_thread.start()
-
 class QueryRequest(BaseModel):
     query: str
 
 @app.post("/query")
 async def query(request: QueryRequest):
     try:
-        from Search.semantic_search import semantic_search
         print(f"Processing query: {request.query}")
-        results_raw = semantic_search(request.query, top_k=5)
-        results = []
-        for match in results_raw["matches"]:
-            results.append({
-                "text": match["text"],
-                "title": match["title"],
-                "score": match["score"],
-                "url": match["source"]
-            })
-        return {"matches": results}
+        return semantic_search(request.query, top_k=5)
     except Exception as e:
         print(f"Error processing query: {str(e)}")
         raise
+
+
+def init():
+    global index, titles, texts, model
+    setup_database()
+    index, titles, texts = load_index_and_metadata()
+    model = load_model()
+    print("Model and FAISS index loaded")
+
+startup_thread = threading.Thread(target=init)
+startup_thread.daemon = True
+startup_thread.start()
 
 if __name__ == "__main__":
     import uvicorn
