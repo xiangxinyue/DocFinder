@@ -1,36 +1,15 @@
 import os
 import gdown
-#added comment for deployment
-
-def download_file(file_id, output_path):
-    if not os.path.exists(output_path):
-        print(f"Downloading {output_path} from Google Drive")
-        gdown.download(id=file_id, output=output_path, quiet=False)
-    else:
-        print(f"{output_path} already exists, skipping download.")
-
-def setup_database():
-    os.makedirs("Database", exist_ok=True)
-
-    index_file_id = "1OJe2t4SZRNzUAUYWoVtTyXtUSFzXDyL6"
-    metadata_file_id = "1Op06GqoKs24YgH_phckH5w4R4H7bz4eX"
-
-    download_file(index_file_id, "Database/wiki_index.faiss")
-    download_file(metadata_file_id, "Database/wiki_metadata.pkl")
-
-setup_database()
-
-from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-import os
-# Import your search function
-from Search.semantic_search import semantic_search
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+import threading
 
-# Create FastAPI app first
+# Create FastAPI app
 app = FastAPI()
 
-# Add a global exception handler to catch and log all errors
+# Add global exception handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     print(f"Global error: {str(exc)}")
@@ -92,7 +71,6 @@ def setup_database():
         pass
 
 # Set up database in a separate thread, don't block app startup
-import threading
 db_thread = threading.Thread(target=setup_database)
 db_thread.daemon = True  # Set as daemon thread, doesn't block app exit
 db_thread.start()
