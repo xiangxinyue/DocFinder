@@ -24,7 +24,7 @@ function App() {
     
     try {
       // Use local API proxy instead of calling remote API directly
-      const response = await axios.post("https://docfinder-ncrl.onrender.com/query", {
+      const response = await axios.post("https://docfinder-u8c5.onrender.com/query", {
         query: query
       });
       
