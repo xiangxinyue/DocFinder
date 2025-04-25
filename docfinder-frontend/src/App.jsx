@@ -12,7 +12,7 @@ function App() {
 
   const handleSearch = async () => {
     try {
-      const response = await axios.post("http://localhost:8000/query", {
+      const response = await axios.post("https://docfinder-u8c5.onrender.com/query", {
         query: query
       });
       setResults(response.data.matches);
