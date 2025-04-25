@@ -30,7 +30,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["https://doc-finder-ecru.vercel.app"],  # frontend vercel url
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
