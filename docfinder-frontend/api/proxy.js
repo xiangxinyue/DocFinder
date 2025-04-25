@@ -25,6 +25,17 @@ export default async function handler(req, res) {
           },
           body: JSON.stringify(req.body),
         });
+
+        // Check if response is JSON before parsing
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          const text = await response.text();
+          console.error('Non-JSON response from backend:', text);
+          return res.status(500).json({
+            error: 'Backend did not return JSON',
+            details: text,
+          });
+        }
         
         // Get backend response
         const data = await response.json();
