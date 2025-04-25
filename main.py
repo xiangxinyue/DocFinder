@@ -76,7 +76,7 @@ def semantic_search(query, top_k=5):
             "title": title,
             "text": text,
             "score": score,
-            "source": source_url
+            "url": source_url
         })
 
     return {"matches": results}
