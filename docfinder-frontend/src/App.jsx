@@ -9,32 +9,35 @@ function App() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSearch = async () => {
+    if (!query.trim()) {
+      setError("Please enter a search query");
+      return;
+    }
+    
     // Clear previous results and errors
     setResults([]);
     setError("");
+    setIsLoading(true);
     
     try {
-      // Fix: remove the duplicate await
-      const response = await axios.post("https://docfinder-ncrl.onrender.com/query", {
+      // Use local API proxy instead of calling remote API directly
+      const response = await axios.post("/api/proxy", {
         query: query
-      }, {
-        // Add explicit headers to help with CORS
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
       });
       
       if (response.data && response.data.matches) {
         setResults(response.data.matches);
       } else {
-        setError("Received an unexpected response format");
+        setError("Received unexpected response format");
       }
     } catch (err) {
       console.error("Search failed", err);
       setError(`Search failed: ${err.message || "Unknown error"}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -47,14 +50,21 @@ function App() {
         query={query}
         setQuery={setQuery}
         onSearch={handleSearch}
+        isLoading={isLoading}
       />
       
       {error && <div className="error-message">{error}</div>}
       
-      <h3>{results.length} matches found</h3>
-      {results.map((res, i) => (
-        <ResultCard key={i} result={res} />
-      ))}
+      {isLoading ? (
+        <div className="loading-indicator">Searching...</div>
+      ) : (
+        <>
+          <h3>{results.length} matches found</h3>
+          {results.map((res, i) => (
+            <ResultCard key={i} result={res} />
+          ))}
+        </>
+      )}
     </div>
   );
 }
