@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 
+# ========== Setup Database ==========
 def download_file(url, output_path):
     try:
         if not os.path.exists(output_path):
